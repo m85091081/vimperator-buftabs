@@ -1,7 +1,7 @@
 This is a vimperator plugin that rewritten from [GGLucas/vimperator-buftabs](https://github.com/GGLucas/vimperator-buftabs).
 
 #### Feature
-* support icon
+* support favicon
 * better performance
 * width adaptive
 
