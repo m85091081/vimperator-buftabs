@@ -6,7 +6,7 @@ This is a vimperator plugin that rewritten from [GGLucas/vimperator-buftabs](htt
 * width adaptive
 
 #### TODO
-- [ ] support Tab Group
+- [ ] support Tab Groups
 - [ ] scrollable
 - [ ] add some options
 - [ ] style definable
