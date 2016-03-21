@@ -161,7 +161,8 @@ class BuftabsBar {
         max-width: ${tabWidth}px;
         min-width: ${tabWidth/5*3}px;
         width: 100%;
-        margin: 0 2px 0 0;
+        margin: 0 2px;
+        padding: 0 2px;
         display: flex;
         align-items: center;
         transition: 0.5s left;
@@ -184,6 +185,7 @@ class BuftabsBar {
 
       #liberator-status-location {
         max-width: 250px;
+        min-width: 250px;
       }
       `;
   }
