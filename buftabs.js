@@ -127,9 +127,9 @@ class BuftabsBar {
   };
 
   handleAttrChange(event) {
-    console.log('Change');
+    console.log('Change', event.detail, event.target._tPos);
     if (event.detail.changed.filter(attr => attr=='image'||attr=='label').length) {
-      this.buftabs[event.target.tabIndex].refresh();
+      this.buftabs[event.target._tPos].refresh();
     }
   };
 
