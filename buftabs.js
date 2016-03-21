@@ -70,11 +70,6 @@ class BuftabsBar {
     console.log('tabOpen');
     let buftab = new Buftab(tab);
     this.buftabs.splice(buftab.index, 0, buftab);
-    this.observer.observe(tab, {
-      attributes: true,
-      attributeOldValue: true,
-      attributeFilter: ['label', 'image']
-    });
     buftab.refresh();
     this.bar.insertBefore(buftab.dom, this.bar.childNodes[buftab.index]);
     this.buftabs.filter(t => t.index > buftab.index)
@@ -131,10 +126,11 @@ class BuftabsBar {
     }, 50);
   };
 
-  handleDomChange(records) {
-    console.log('Change', records);
-    records.filter(r => r.type === 'attributes').map(r => r.target)
-      .forEach(t => this.buftabs[t._tPos].refresh());
+  handleAttrChange(event) {
+    console.log('Change');
+    if (event.detail.changed.filter(attr => attr=='image'||attr=='label').length) {
+      this.buftabs[event.target.tabIndex].refresh();
+    }
   };
 
   get baseCss() {
@@ -203,7 +199,6 @@ class BuftabsBar {
     this.bar.setAttribute('id', 'liberator-buftabs-toolbar');
     $('#liberator-statusline').insertBefore(this.bar, $('#liberator-status'));
 
-    this.observer = new window.MutationObserver(this.handleDomChange.bind(this));
     for (let tab of $All('tab')) {
       this.tabOpen(tab);
       if (tab.selected) {
@@ -222,6 +217,15 @@ class BuftabsBar {
     });
     gBrowser.tabContainer.addEventListener("TabClose", event => {
       this.tabClose(event.target);
+    });
+    gBrowser.tabContainer.addEventListener("TabAttrModified", event => {
+      this.handleAttrChange(event);
+    });
+    gBrowser.tabContainer.addEventListener("TabPinned", event => {
+      console.log('TabPinned', event);
+    });
+    gBrowser.tabContainer.addEventListener("TabUnpinned", event => {
+      console.log('TabUnpinned', event);
     });
 
     this.bar.addEventListener('mousedown', event => {
