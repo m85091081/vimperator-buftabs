@@ -1,5 +1,5 @@
 let INFO =xml`
-<plugin name='buftabs' version='3.0.0'
+<plugin name='buftabs' version='3.0.1'
   summary='buftabs: show the tabbar in the statusline'
   xmlns='http://vimperator.org/namespaces/liberator'>
 <author>s2marine</author>
@@ -126,11 +126,11 @@ class BuftabsBar {
         $('#liberator-status-location').crop = 'end';
     }
 
-    sync(min, max) {
+    sync(min=-Infinity, max=Infinity) {
         this.alignDom();
+	min = Math.min(min, max);
+	max = Math.max(min, max);
         let len = gBrowser.visibleTabs.length;
-        min = min === undefined ? 0 : min;
-        max = max === undefined ? len : max;
         for (let i=Math.max(0, min); i<Math.min(len, max+1); i++) {
             this.buftabs[i].sync(gBrowser.visibleTabs[i], i);
         }
