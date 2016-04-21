@@ -1,7 +1,7 @@
 let INFO =xml`
-<plugin name="buftabs" version="2.0.0"
-  summary="buftabs: show the tabbar in the statusline"
-  xmlns="http://vimperator.org/namespaces/liberator">
+<plugin name='buftabs' version='3.0.0'
+  summary='buftabs: show the tabbar in the statusline'
+  xmlns='http://vimperator.org/namespaces/liberator'>
 <author>s2marine</author>
 <license>GPLv3</license>
 </plugin>
@@ -9,252 +9,227 @@ let INFO =xml`
 'use strict';
 
 class Buftab {
-  constructor(tab) {
-    console.log('new Buftab');
-    this.tab = tab;
-    this.dom = document.createElement('div');
-    this.domLabel = document.createElement('label');
-    this.domLabel.setAttribute('crop', 'end');
-    this.domImage = document.createElement('image');
-    this.dom.classList.add('buftab');
-    this.refresh();
-    this.dom.appendChild(this.domImage);
-    this.dom.appendChild(this.domLabel);
-  }
+    constructor() {
+        this.dom = document.createElement('div');
+        this.domLabel = document.createElement('label');
+        this.domLabel.setAttribute('crop', 'end');
+        this.domImage = document.createElement('image');
+        this.dom.classList.add('buftab');
+        this.dom.appendChild(this.domImage);
+        this.dom.appendChild(this.domLabel);
+    }
+    sync(tab, index) {
+        let flag = false;
+        if (this.label !== tab.label) {
+            flag = true;
+            this.label = tab.label;
+        }
+        if (this.index !== index) {
+            flag = true;
+            this.index = index;
+        }
 
-  refresh() {
-    console.log('refresh');
-    console.log('oldValue', this.index, this.label, this.selected, this.image);
-    console.log('newValue', this.tab._tPos, this.tab.label, this.tab.selected, this.tab.image);
-    let flag = false;
-    if (this.index !== this.tab._tPos) {
-      flag = true;
-      this.index = this.tab._tPos;
-      this.dom.index = this.tab._tPos;
-    }
-    if (this.label !== this.tab.label) {
-      flag = true;
-      this.label = this.tab.label;
-    }
-    if (flag) {
-      this.domLabel.setAttribute('value', `${this.index+1} ${this.label}`);
-    }
-    if (this.selected !== this.tab.selected) {
-      this.selected = this.tab.selected;
-      if (this.tab.selected) {
-        this.dom.classList.add('selected');
-      } else {
-        this.dom.classList.remove('selected');
-      }
-    }
-    if (this.image !== this.tab.image) {
-      this.image = this.tab.image;
-      this.domImage.setAttribute('src', this.image);
-    }
-  }
+        if (flag) {
+            this.domLabel.setAttribute('value', `${this.index+1} ${this.label}`);
+        }
 
-  getValue() {
-    return {
-      index,
-      title,
-      imageUrl,
-      selected,
-      tab
-    };
-  }
+        if (tab.pinned) {
+            !this.dom.classList.contains('pinned') &&
+                this.dom.classList.add('pinned');
+        } else {
+            this.dom.classList.contains('pinned') &&
+                this.dom.classList.remove('pinned');
+        }
+
+        if (tab.selected) {
+            !this.dom.classList.contains('selected') &&
+                this.dom.classList.add('selected');
+        }
+        else if (!tab.selected) {
+            this.dom.classList.contains('selected') &&
+                this.dom.classList.remove('selected');
+        }
+
+        if (this.image !== tab.image) {
+            this.image = tab.image;
+            this.domImage.setAttribute('src', this.image);
+        }
+    }
 }
 
 class BuftabsBar {
+    constructor() {
+        this.buftabs = [];
+        this.bar = document.createElement('toolbaritem');
+        this.bar.setAttribute('id', 'liberator-buftabs-toolbar');
+        $('#liberator-statusline').insertBefore(this.bar, $('#liberator-status'));
 
-  tabOpen(tab) {
-    console.log('tabOpen');
-    let buftab = new Buftab(tab);
-    this.buftabs.splice(buftab.index, 0, buftab);
-    buftab.refresh();
-    this.bar.insertBefore(buftab.dom, this.bar.childNodes[buftab.index]);
-    this.buftabs.filter(t => t.index > buftab.index)
-      .forEach(t => {
-        t.index += 1;
-        t.refresh();
-      });
-  };
+        gBrowser.tabContainer.addEventListener('TabOpen', event => {
+            //console.log('TabOpen', event.target._tPos);
+            this.sync(event.target._tPos-1);
+        });
+        gBrowser.tabContainer.addEventListener('TabSelect', event => {
+            //console.log('TabSelect', event.target._tPos);
+	    setTimeout(()=>{
+                this.sync();
+	    }, 50);
+        });
+        gBrowser.tabContainer.addEventListener('TabMove', event => {
+            //console.log('TabMove',event.detail, event.target._tPos);
+            this.sync(event.detail, event.target._tPos);
+        });
+        gBrowser.tabContainer.addEventListener('TabClose', event => {
+            //console.log('TabClose', event.target._tPos);
+            this.sync(event.target._tPos);
+        });
+        gBrowser.tabContainer.addEventListener('TabAttrModified', event => {
+            //console.log('TabAttrModified');
+            if (event.detail.changed.filter(attr => attr=='image'||attr=='label').length) {
+                this.sync(event.target._tPos, event.target._tPos);
+            }
+        });
+        gBrowser.tabContainer.addEventListener('TabPinned', event => {
+            //console.log('TabPinned');
+            this.sync(event.target._tPos, event.target._tPos);
+            this.sync();
+        });
+        gBrowser.tabContainer.addEventListener('TabUnpinned', event => {
+            //console.log('TabUnpinned');
+            this.sync(event.target._tPos, event.target._tPos);
+        });
+
+        this.bar.addEventListener('mousedown', event => {
+            let dom = event.target;
+            while (!dom.classList.contains('buftab')) {
+                dom = dom.parentNode;
+            }
+            let index = $('#liberator-buftabs-toolbar').childNodes.indexOf(dom);
+            if (event.button === 0) {
+                gBrowser.selectedTab = gBrowser.visibleTabs[index];
+            }
+            else if (event.button === 1) {
+                gBrowser.removeTab(gBrowser.visibleTabs[index]);
+            }
+        });
+
+	window.addEventListener('willshowtabview', event => {
+            this.buftabs.forEach(b => b.dom.classList.add('hidden'));
+	});
+
+	window.addEventListener('willhidetabview', event => {
+            this.buftabs.forEach(b => b.dom.classList.remove('hidden'));
+	});
 
 
-  tabSelect(index, removeing) {
-    console.log('tabSelect', index);
-    if (this.buftabs[this.selected]) {
-      this.buftabs[this.selected].refresh();
+        this.cleanFix();
+        styles.addSheet(false, 'buftabs', 'chrome://*', this.baseCss);
+        $('#liberator-status-location').crop = 'end';
     }
-    this.selected = index - removeing.filter(t => t._tPos <= index).length;
-    this.buftabs[this.selected].refresh();
-  };
 
-  tabMove(from, to) {
-    console.log('tabMove', from, to);
-    let tmpTab = this.buftabs[from].tab;
-    if (to < from) {
-      for(let i=from; i>to; i--) {
-        this.buftabs[i].tab = this.buftabs[i-1].tab;
-      }
-    }
-    else {
-      for(let i=from; i<to; i++) {
-        this.buftabs[i].tab = this.buftabs[i+1].tab;
-      }
-    }
-    this.buftabs[to].tab =  tmpTab;
-    this.buftabs.filter(t => Math.min(from, to) <= t.index <= Math.max(from, to))
-      .forEach(t => {
-        t.refresh();
-        if (t.selected) {
-          this.selected = t.index;
+    sync(min, max) {
+        this.alignDom();
+        let len = gBrowser.visibleTabs.length;
+        min = min === undefined ? 0 : min;
+        max = max === undefined ? len : max;
+        for (let i=Math.max(0, min); i<Math.min(len, max+1); i++) {
+            this.buftabs[i].sync(gBrowser.visibleTabs[i], i);
         }
-      });
-  };
-
-  tabClose(tab) {
-    console.log('tabClose', tab._tPos);
-    let index = tab._tPos;
-    let removes = this.buftabs.splice(index, 1);
-    removes[0].dom.remove();
-    if (this.selected > index) {
-      this.selected -= 1;
-    }
-    setTimeout(()=>{
-    this.buftabs.filter(t => t.index > index)
-      .forEach(t => t.refresh());
-    }, 50);
-  };
-
-  handleAttrChange(event) {
-    console.log('Change', event.detail, event.target._tPos);
-    if (event.detail.changed.filter(attr => attr=='image'||attr=='label').length) {
-      this.buftabs[event.target._tPos].refresh();
-    }
-  };
-
-  get baseCss() {
-    let lineHeight = this.bar.scrollHeight;
-    let tabWidth = 200;
-    return `
-
-      #liberator-statusline {
-        display: flex;
-        align-items: center;
-      }
-
-      #liberator-buftabs-toolbar {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        flex-grow: 10000;
-        overflow-x: hidden;
-        position: relative;
-      }
-
-      .buftab {
-        background: #D8D8D8;
-        max-width: ${tabWidth}px;
-        min-width: ${tabWidth/5*3}px;
-        width: 100%;
-        margin: 0 2px;
-        padding: 0 2px;
-        display: flex;
-        align-items: center;
-        transition: 0.5s left;
-      }
-
-      .buftab image {
-        flex-shrink: 0;
-        max-height: ${lineHeight-4}px;
-        max-width: ${lineHeight-4}px;
-      }
-
-      .buftab.selected {
-        background: #585858;
-      }
-
-      #liberator-status {
-        display: flex;
-        align-items: center;
-      }
-
-      #liberator-status-location {
-        max-width: 250px;
-        min-width: 250px;
-      }
-      `;
-  }
-
-  cleanFix() {
-    $All('#liberator-statusline > *, #liberator-status > *')
-      .filter(_ => _.hasAttribute('flex'))
-      .forEach(_ => _.removeAttribute('flex'));
-  }
-
-  constructor() {
-    this.buftabs = [];
-    this.selected = undefined;
-    this.bar = document.createElement('toolbaritem');
-    this.bar.setAttribute('id', 'liberator-buftabs-toolbar');
-    $('#liberator-statusline').insertBefore(this.bar, $('#liberator-status'));
-
-    for (let tab of $All('tab')) {
-      this.tabOpen(tab);
-      if (tab.selected) {
-        this.selected = tab._tPos;
-      }
     }
 
-    gBrowser.tabContainer.addEventListener("TabOpen", event => {
-      this.tabOpen(event.target);
-    });
-    gBrowser.tabContainer.addEventListener("TabSelect", event => {
-      this.tabSelect(event.target._tPos, gBrowser._removingTabs);
-    });
-    gBrowser.tabContainer.addEventListener("TabMove", event => {
-      this.tabMove(event.detail, event.target._tPos);
-    });
-    gBrowser.tabContainer.addEventListener("TabClose", event => {
-      this.tabClose(event.target);
-    });
-    gBrowser.tabContainer.addEventListener("TabAttrModified", event => {
-      this.handleAttrChange(event);
-    });
-    gBrowser.tabContainer.addEventListener("TabPinned", event => {
-      console.log('TabPinned', event);
-    });
-    gBrowser.tabContainer.addEventListener("TabUnpinned", event => {
-      console.log('TabUnpinned', event);
-    });
+    alignDom() {
+        let len = gBrowser.visibleTabs.length;
+        while (this.buftabs.length > len) {
+            let removes = this.buftabs.splice(this.buftabs.length-1, 1);
+            removes[0].dom.remove();
+        }
+        while (this.buftabs.length < len) {
+            let buftab = new Buftab();
+            console.log(buftab.dom)
+            this.bar.insertBefore(buftab.dom, null);
+            this.buftabs.splice(this.buftabs.length, 0, buftab);
+        }
+    }
 
-    this.bar.addEventListener('mousedown', event => {
-      console.log('click');
-      let dom = event.target;
-      while (!dom.classList.contains('buftab')) {
-        dom = dom.parentNode;
-      }
-      console.log(dom);
-      let index = dom.index;
-      if (event.button === 0) {
-        gBrowser.selectTabAtIndex(index);
-      }
-      else if (event.button === 1) {
-        gBrowser.removeTab(gBrowser.tabs[index]);
-      }
-    });
+    get baseCss() {
+        let lineHeight = this.bar.scrollHeight;
+        let tabWidth = 200;
+        return `
 
-    this.cleanFix();
-    styles.addSheet(false, 'buftabs', 'chrome://*', this.baseCss);
-    $('#liberator-status-location').crop = 'end';
-  };
+            #liberator-statusline {
+                max-height: 24px;
+                display: flex;
+                align-items: center;
+            }
+
+        #liberator-buftabs-toolbar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-grow: 10000;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .buftab {
+            background: #D8D8D8;
+            max-width: ${tabWidth}px;
+            min-width: ${tabWidth/5*3}px;
+            width: 100%;
+            height: 21px;
+            margin: 0 2px;
+            padding: 0 2px;
+            display: flex;
+            align-items: center;
+            transition: 0.5s left;
+        }
+
+        .buftab image {
+            flex-shrink: 0;
+            max-height: 17px;
+            max-width: 17px;
+        }
+
+        .buftab.pinned {
+            max-width: 21px;
+            min-width: 21px;
+        }
+
+        .buftab.pinned label {
+            display: none;
+        }
+
+        .buftab.selected {
+            background: #585858;
+        }
+
+        .buftab.hidden {
+            display: none;
+        }
+
+        #liberator-status {
+            display: flex;
+            align-items: center;
+        }
+
+        #liberator-status-location {
+            max-width: 250px;
+            min-width: 250px;
+        }
+        `;
+    }
+
+    cleanFix() {
+        $All('#liberator-statusline > *, #liberator-status > *')
+            .filter(_ => _.hasAttribute('flex'))
+            .forEach(_ => _.removeAttribute('flex'));
+    }
 }
 
 let $ = document.querySelector.bind(document);
 let $All = document.querySelectorAll.bind(document);
 NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 NodeList.prototype.filter = Array.prototype.filter;
+NodeList.prototype.forEach = Array.prototype.forEach;
+NodeList.prototype.indexOf = Array.prototype.indexOf;
 
 liberator.buftabs = new BuftabsBar();
-
-// vim:sw=2 ts=2 et si fdm=marker:

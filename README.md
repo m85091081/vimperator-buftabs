@@ -4,10 +4,12 @@ This is a vimperator plugin that rewritten from [GGLucas/vimperator-buftabs](htt
 * support favicon
 * better performance
 * width adaptive
+* support Tab Groups
+* support Pinned Tab
 
 #### TODO
-- [ ] support Tab Groups
+- [X] support Tab Groups
+- [X] support Pinned Tab
 - [ ] scrollable
-- [ ] support Pinned Tab
 - [ ] add some options
 - [ ] style definable
