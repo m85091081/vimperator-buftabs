@@ -30,7 +30,7 @@ class Buftab {
         }
 
         if (flag) {
-            this.domLabel.setAttribute('value', `${this.index+1} ${this.label}`);
+            this.domLabel.setAttribute('value', `${this.index+1}. ${this.label}`);
         }
 
         if (tab.pinned) {
@@ -66,7 +66,7 @@ class BuftabsBar {
 
         gBrowser.tabContainer.addEventListener('TabOpen', event => {
             //console.log('TabOpen', event.target._tPos);
-            this.sync(event.target._tPos-1);
+            this.sync(event.target._tPos);
         });
         gBrowser.tabContainer.addEventListener('TabSelect', event => {
             //console.log('TabSelect', event.target._tPos);
