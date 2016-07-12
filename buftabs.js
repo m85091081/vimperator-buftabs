@@ -66,7 +66,7 @@ class BuftabsBar {
 
         gBrowser.tabContainer.addEventListener('TabOpen', event => {
             //console.log('TabOpen', event.target._tPos);
-            this.sync(event.target._tPos);
+            this.sync(event.target._tPos-1);
         });
         gBrowser.tabContainer.addEventListener('TabSelect', event => {
             //console.log('TabSelect', event.target._tPos);
@@ -80,22 +80,22 @@ class BuftabsBar {
         });
         gBrowser.tabContainer.addEventListener('TabClose', event => {
             //console.log('TabClose', event.target._tPos);
-            this.sync(event.target._tPos);
+            this.sync(event.target._tPos-1);
         });
         gBrowser.tabContainer.addEventListener('TabAttrModified', event => {
             //console.log('TabAttrModified');
             if (event.detail.changed.filter(attr => attr=='image'||attr=='label').length) {
-                this.sync(event.target._tPos, event.target._tPos);
+                this.sync(event.target._tPos-1, event.target._tPos);
             }
         });
         gBrowser.tabContainer.addEventListener('TabPinned', event => {
             //console.log('TabPinned');
-            this.sync(event.target._tPos, event.target._tPos);
+            this.sync(event.target._tPos-1, event.target._tPos);
             this.sync();
         });
         gBrowser.tabContainer.addEventListener('TabUnpinned', event => {
             //console.log('TabUnpinned');
-            this.sync(event.target._tPos, event.target._tPos);
+            this.sync(event.target._tPos-1, event.target._tPos);
         });
 
         this.bar.addEventListener('mousedown', event => {
@@ -131,7 +131,7 @@ class BuftabsBar {
 	let _min = Math.min(min, max);
 	let _max = Math.max(min, max)+1;
         let len = gBrowser.visibleTabs.length;
-	console.log(_min, _max);
+	//console.log(_min, _max);
         for (let i=Math.max(0, _min); i<Math.min(len, _max); i++) {
             this.buftabs[i].sync(gBrowser.visibleTabs[i], i);
         }
