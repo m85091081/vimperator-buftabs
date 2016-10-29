@@ -1,3 +1,4 @@
+'use strict';
 let INFO =xml`
 <plugin name='buftabs' version='3.0.2'
   summary='buftabs: show the tabbar in the statusline'
@@ -6,7 +7,6 @@ let INFO =xml`
 <license>GPLv3</license>
 </plugin>
 `;
-'use strict';
 
 class Buftab {
     constructor() {
@@ -35,19 +35,19 @@ class Buftab {
 
         if (tab.pinned) {
             !this.dom.classList.contains('pinned') &&
-                this.dom.classList.add('pinned');
+            this.dom.classList.add('pinned');
         } else {
             this.dom.classList.contains('pinned') &&
-                this.dom.classList.remove('pinned');
+            this.dom.classList.remove('pinned');
         }
 
         if (tab.selected) {
             !this.dom.classList.contains('selected') &&
-                this.dom.classList.add('selected');
+            this.dom.classList.add('selected');
         }
         else if (!tab.selected) {
             this.dom.classList.contains('selected') &&
-                this.dom.classList.remove('selected');
+            this.dom.classList.remove('selected');
         }
 
         if (this.image !== tab.image) {
@@ -70,9 +70,11 @@ class BuftabsBar {
         });
         gBrowser.tabContainer.addEventListener('TabSelect', event => {
             //console.log('TabSelect', event.target._tPos);
-	    setTimeout(()=>{
+            let index = event.target._tPos;
+            setTimeout(()=>{
                 this.sync();
-	    }, 50);
+                this.scrollTo(index);
+            }, 50);
         });
         gBrowser.tabContainer.addEventListener('TabMove', event => {
             //console.log('TabMove',event.detail, event.target._tPos);
@@ -91,7 +93,7 @@ class BuftabsBar {
         gBrowser.tabContainer.addEventListener('TabPinned', event => {
             //console.log('TabPinned');
             this.sync(event.target._tPos-1, event.target._tPos);
-            this.sync();
+            //this.sync();
         });
         gBrowser.tabContainer.addEventListener('TabUnpinned', event => {
             //console.log('TabUnpinned');
@@ -112,13 +114,13 @@ class BuftabsBar {
             }
         });
 
-	window.addEventListener('willshowtabview', event => {
+        window.addEventListener('willshowtabview', event => {
             this.buftabs.forEach(b => b.dom.classList.add('hidden'));
-	});
+        });
 
-	window.addEventListener('willhidetabview', event => {
+        window.addEventListener('willhidetabview', event => {
             this.buftabs.forEach(b => b.dom.classList.remove('hidden'));
-	});
+        });
 
 
         this.cleanFix();
@@ -128,10 +130,10 @@ class BuftabsBar {
 
     sync(min=-Infinity, max=Infinity) {
         this.alignDom();
-	let _min = Math.min(min, max);
-	let _max = Math.max(min, max)+1;
+        let _min = Math.min(min, max);
+        let _max = Math.max(min, max)+1;
         let len = gBrowser.visibleTabs.length;
-	//console.log(_min, _max);
+        //console.log(_min, _max);
         for (let i=Math.max(0, _min); i<Math.min(len, _max); i++) {
             this.buftabs[i].sync(gBrowser.visibleTabs[i], i);
         }
@@ -151,16 +153,36 @@ class BuftabsBar {
         }
     }
 
+    scrollTo(index) {
+        if (this.buftabs[0] === undefined) { return; }
+        let leftLimit = this.bar.getBoundingClientRect().left;
+        let rightLimit = this.bar.getBoundingClientRect().right;
+        let width = rightLimit - leftLimit;
+
+        let startX = this.buftabs[0].dom.getBoundingClientRect().left;
+
+        let targetBuftabRect = this.buftabs[index].dom.getBoundingClientRect();
+        let [left, right] = [targetBuftabRect.left - startX, targetBuftabRect.right - startX];
+
+        debugger;
+        if (left + startX < leftLimit) {
+          this.bar.scrollTo(left, 0);
+        } else if (rightLimit < right + startX) {
+          this.bar.scrollTo(right - width, 0);
+        }
+    }
+
     get baseCss() {
         let lineHeight = this.bar.scrollHeight;
         let tabWidth = 200;
         return `
 
-            #liberator-statusline {
-                max-height: 24px;
-                display: flex;
-                align-items: center;
-            }
+        #liberator-statusline {
+            position: relative;
+            max-height: 24px;
+            display: flex;
+            align-items: center;
+        }
 
         #liberator-buftabs-toolbar {
             display: flex;
@@ -215,6 +237,12 @@ class BuftabsBar {
         #liberator-status-location {
             max-width: 250px;
             min-width: 250px;
+        }
+
+        #liberator-message-toolbar {
+            position: absolute;
+            top: 4px;
+            z-index: 10;
         }
         `;
     }

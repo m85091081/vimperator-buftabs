@@ -10,6 +10,6 @@ This is a vimperator plugin that rewritten from [GGLucas/vimperator-buftabs](htt
 #### TODO
 - [X] support Tab Groups
 - [X] support Pinned Tab
-- [ ] scrollable
+- [X] scrollable
 - [ ] add some options
 - [ ] style definable
