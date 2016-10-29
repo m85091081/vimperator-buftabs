@@ -35,19 +35,19 @@ class Buftab {
 
         if (tab.pinned) {
             !this.dom.classList.contains('pinned') &&
-            this.dom.classList.add('pinned');
+                this.dom.classList.add('pinned');
         } else {
             this.dom.classList.contains('pinned') &&
-            this.dom.classList.remove('pinned');
+                this.dom.classList.remove('pinned');
         }
 
         if (tab.selected) {
             !this.dom.classList.contains('selected') &&
-            this.dom.classList.add('selected');
+                this.dom.classList.add('selected');
         }
         else if (!tab.selected) {
             this.dom.classList.contains('selected') &&
-            this.dom.classList.remove('selected');
+                this.dom.classList.remove('selected');
         }
 
         if (this.image !== tab.image) {
@@ -93,7 +93,6 @@ class BuftabsBar {
         gBrowser.tabContainer.addEventListener('TabPinned', event => {
             //console.log('TabPinned');
             this.sync(event.target._tPos-1, event.target._tPos);
-            //this.sync();
         });
         gBrowser.tabContainer.addEventListener('TabUnpinned', event => {
             //console.log('TabUnpinned');
@@ -166,9 +165,9 @@ class BuftabsBar {
 
         debugger;
         if (left + startX < leftLimit) {
-          this.bar.scrollTo(left, 0);
+            this.bar.scrollTo(left, 0);
         } else if (rightLimit < right + startX) {
-          this.bar.scrollTo(right - width, 0);
+            this.bar.scrollTo(right - width, 0);
         }
     }
 
