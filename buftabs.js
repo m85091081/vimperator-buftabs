@@ -163,7 +163,6 @@ class BuftabsBar {
         let targetBuftabRect = this.buftabs[index].dom.getBoundingClientRect();
         let [left, right] = [targetBuftabRect.left - startX, targetBuftabRect.right - startX];
 
-        debugger;
         if (left + startX < leftLimit) {
             this.bar.scrollTo(left, 0);
         } else if (rightLimit < right + startX) {
