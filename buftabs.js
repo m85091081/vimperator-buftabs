@@ -113,6 +113,11 @@ class BuftabsBar {
             }
         });
 
+        this.bar.addEventListener('DOMMouseScroll', event => {
+            //console.log(event.detail);
+            this.scrollOffset(event.detail * 25);
+        });
+
         window.addEventListener('willshowtabview', event => {
             this.buftabs.forEach(b => b.dom.classList.add('hidden'));
         });
@@ -158,7 +163,7 @@ class BuftabsBar {
         let rightLimit = this.bar.getBoundingClientRect().right;
         let width = rightLimit - leftLimit;
 
-        let startX = this.buftabs[0].dom.getBoundingClientRect().left;
+        let startX = this.buftabs[0].dom.getBoundingClientRect().left - 4;
 
         let targetBuftabRect = this.buftabs[index].dom.getBoundingClientRect();
         let [left, right] = [targetBuftabRect.left - startX, targetBuftabRect.right - startX];
@@ -168,6 +173,13 @@ class BuftabsBar {
         } else if (rightLimit < right + startX) {
             this.bar.scrollTo(right - width, 0);
         }
+    }
+    scrollOffset(offset) {
+        if (this.buftabs[0] === undefined) { return; }
+        let leftLimit = this.bar.getBoundingClientRect().left;
+        let startX = this.buftabs[0].dom.getBoundingClientRect().left - 4;
+
+        this.bar.scrollTo(leftLimit - startX + offset, 0);
     }
 
     get baseCss() {
